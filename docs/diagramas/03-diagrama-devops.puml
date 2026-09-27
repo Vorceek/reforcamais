@@ -1,0 +1,76 @@
+@startuml 03-diagrama-devops
+title Reforça+: Diagrama de Arquitetura DevOps (CI/CD)
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam rectangle {
+  BackgroundColor #F7F9FC
+  BorderColor #2F4F7F
+  RoundCorner 10
+}
+left to right direction
+
+actor "Desenvolvedor" as Dev
+
+rectangle "1. PLANEJAR" as Plan {
+  rectangle "GitHub Issues\n+ Projects (Kanban)" as Issues
+}
+
+rectangle "2. CODIFICAR" as Code {
+  rectangle "VS Code\n+ Git" as IDE
+  rectangle "GitHub Repository\n(branches: main, develop, feature/*)" as Repo
+  rectangle "Pull Request\n+ Code Review" as PR
+}
+
+rectangle "3. INTEGRAÇÃO CONTÍNUA (GitHub Actions)" as CI {
+  rectangle "Lint (ESLint)\n+ Prettier" as Lint
+  rectangle "Testes unitários\n(Vitest / Jest)" as Test
+  rectangle "Build\n(Vite / tsc)" as Build
+  rectangle "Auditoria PWA\n(Lighthouse CI)" as LH
+  rectangle "Segurança\n(npm audit, Dependabot)" as Sec
+}
+
+rectangle "4. ENTREGA CONTÍNUA" as CD {
+  rectangle "Preview Deploy\n(por PR)" as Preview
+  rectangle "Migrações Prisma\n(prisma migrate deploy)" as Migr
+}
+
+rectangle "5. IMPLANTAÇÃO (Deploy)" as Deploy {
+  rectangle "Vercel\n(frontend PWA)" as Vercel
+  rectangle "Render\n(API Docker)" as Render
+  rectangle "Neon\n(PostgreSQL)" as Neon
+}
+
+rectangle "6. OPERAR e MONITORAR" as Ops {
+  rectangle "Logs e métricas\n(Render / Vercel)" as Logs
+  rectangle "Uptime\n(UptimeRobot)" as Uptime
+  rectangle "Erros\n(Sentry free)" as Sentry
+}
+
+rectangle "7. FEEDBACK" as Fb {
+  rectangle "Usuários da comunidade\n+ Issues" as Users
+}
+
+Dev --> Issues : cria tarefas
+Issues --> IDE
+IDE --> Repo : git push
+Repo --> PR
+PR --> Lint : on: pull_request
+Lint --> Test
+Test --> Build
+Build --> LH
+Build --> Sec
+Sec --> Preview
+LH --> Preview
+Preview --> PR : status check
+PR --> Repo : merge em main
+Repo --> Migr : on: push main
+Migr --> Neon
+Repo --> Vercel : deploy automático
+Repo --> Render : deploy automático (Dockerfile)
+Vercel --> Logs
+Render --> Logs
+Logs --> Sentry
+Logs --> Uptime
+Sentry --> Users
+Users --> Issues : retroalimenta
+@enduml

@@ -1,0 +1,57 @@
+@startuml 02-diagrama-implantacao
+title Reforça+: Diagrama de Arquitetura de Implantação (UML Deployment)
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam node {
+  BackgroundColor #F7F9FC
+  BorderColor #2F4F7F
+}
+skinparam database {
+  BackgroundColor #FFF4E0
+}
+
+node "Dispositivo do Usuário\n(smartphone / desktop)" <<device>> as Cliente {
+  node "Navegador (Chrome, Edge, Safari)" <<execution environment>> as Browser {
+    artifact "Reforça+ PWA\n(HTML, JS, CSS, manifest.json)" as PWAArt
+    artifact "Service Worker\n(sw.js)" as SWArt
+    database "IndexedDB / Cache Storage\n(dados offline)" as LocalDB
+  }
+}
+
+cloud "Vercel (Edge Network / CDN)" <<cloud>> as Vercel {
+  node "Static Hosting + CDN" <<execution environment>> as Static {
+    artifact "build do frontend\n(dist/)" as Dist
+  }
+}
+
+cloud "Render (Web Service)" <<cloud>> as Render {
+  node "Container Docker\n(Node.js 20 LTS)" <<execution environment>> as Cont {
+    artifact "reforcamais-api\n(Express)" as API
+    artifact "Prisma Client" as Prisma
+  }
+}
+
+cloud "Neon (PostgreSQL Serverless)" <<cloud>> as Neon {
+  database "reforcamais_db\n(PostgreSQL 16)" as PG
+}
+
+cloud "Serviços externos" as Ext {
+  node "Firebase Cloud Messaging" as FCM
+  node "Google OAuth 2.0" as OAuth
+}
+
+Browser -down-> Static : HTTPS / GET (assets)
+SWArt --> LocalDB : cache e sincronização
+PWAArt --> API : HTTPS / REST JSON\n(Bearer JWT)
+API --> PG : TLS / PostgreSQL protocol\n(pooler)
+Prisma ..> PG
+API --> FCM : HTTPS (envio push)
+Browser --> OAuth : HTTPS (login)
+FCM --> Browser : Web Push
+
+note right of Neon
+  Camada gratuita: 0,5 GB,
+  branching de banco para
+  ambientes de teste.
+end note
+@enduml

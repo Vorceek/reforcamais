@@ -1,0 +1,76 @@
+@startuml
+title Reforça+: Diagrama UML de Pacotes (Arquitetura da Aplicação)
+allowmixing
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam package {
+  BackgroundColor #F7F9FC
+  BorderColor #2F4F7F
+}
+
+package "Frontend PWA (React + Vite)" as FE {
+  package "ui" as UI {
+    package "pages" as Pages {}
+    package "components" as Comp {}
+  }
+  package "state" as State {}
+  package "services" as FESvc {
+    package "api-client" as ApiClient {}
+    package "auth" as FEAuth {}
+  }
+  package "pwa" as PWA {
+    package "service-worker" as SW {}
+    package "cache-offline (IndexedDB)" as IDB {}
+    package "push-notifications" as Push {}
+  }
+}
+
+package "Backend API (Node.js + Express)" as BE {
+  package "presentation" as Pres {
+    package "controllers" as Ctrl {}
+    package "middlewares" as Mid {}
+  }
+  package "application" as App {
+    package "usecases" as UC {}
+    package "dto" as DTO {}
+  }
+  package "domain" as Dom {
+    package "entities" as Ent {}
+    package "repositories (interfaces)" as RepoI {}
+  }
+  package "infrastructure" as Infra {
+    package "persistence (Prisma)" as Persist {}
+    package "auth (JWT)" as BEAuth {}
+    package "notifications" as Notif {}
+  }
+}
+
+database "Banco de Dados\n(PostgreSQL)" as DB
+
+Pages ..> Comp
+Pages ..> State
+Pages ..> ApiClient
+State ..> ApiClient
+ApiClient ..> FEAuth
+SW ..> IDB
+SW ..> Push
+ApiClient ..> SW : <<use>>
+
+ApiClient ..> Ctrl : HTTPS / REST (JSON)
+
+Ctrl ..> UC
+Ctrl ..> Mid
+Mid ..> BEAuth
+UC ..> DTO
+UC ..> Ent
+UC ..> RepoI
+Persist ..|> RepoI : <<realize>>
+Notif ..> UC
+Persist ..> DB
+BEAuth ..> Ent
+
+note bottom of Dom
+  Camada de domínio sem dependências
+  externas (Clean Architecture).
+end note
+@enduml
